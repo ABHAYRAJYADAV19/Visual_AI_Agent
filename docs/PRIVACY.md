@@ -1,69 +1,51 @@
-# Visual Activity AI Agent — Privacy & Consent Design
+# Privacy Model & Data Constraints
 
-> This document describes the privacy model, consent flow, data lifecycle, and
-> user controls implemented in the Visual Activity AI Agent system.
+Visual Activity Agent is built around a rigorous privacy-first model. This document outlines the technical constraints enforcing this model across the stack.
 
-*This is a living document. It will be expanded as features are implemented.*
+## 1. Consent Gate
 
----
+**Constraint:** No data is captured without explicit consent.
+**Implementation:**
+- The extension installs in an `OFF` state by default.
+- `background.js` and `content-script.js` require explicit flags (`eventsEnabled` and `visualEnabled`) stored in `chrome.storage.local`.
+- If consent is revoked or paused via the popup, capture stops immediately.
 
-## Table of Contents
+## 2. Point-of-Capture Redaction (Defense in Depth #1)
 
-- [1. Philosophy](#1-philosophy)
-- [2. Consent Model](#2-consent-model)
-- [3. Data Collection](#3-data-collection)
-- [4. Redaction & Sanitization](#4-redaction--sanitization)
-- [5. Data Storage](#5-data-storage)
-- [6. Data Retention & Deletion](#6-data-retention--deletion)
-- [7. AI Annotation Privacy](#7-ai-annotation-privacy)
-- [8. Security Controls](#8-security-controls)
+**Constraint:** Sensitive data never leaves the DOM.
+**Implementation:**
+- The content script's `redaction.js` module inspects elements *before* accessing their values.
+- Input elements matching `type="password"`, `autocomplete` patterns (`cc-number`, `new-password`), or name/id heuristics (e.g. `ssn`, `cvv`) are flagged as `sensitive: true`.
+- **CRITICAL:** The `.value` property of sensitive elements is *never read by the JavaScript engine*.
 
----
+## 3. Regular Expression Scrubbing (Defense in Depth #2)
 
-## 1. Philosophy
+**Constraint:** Pattern-based PII must be stripped from any text that is captured (e.g. URLs).
+**Implementation:**
+- Both the client (`redaction.js`) and server (`ingest.py`) execute Regex scrubbing for common PII patterns:
+  - SSNs (e.g., `XXX-XX-XXXX`)
+  - Credit Cards (13-19 digit blocks)
+  - Email Addresses
+- Query parameters matching `token`, `password`, `email`, etc., in URLs are replaced with `[REDACTED]`.
 
-This project is built on the principle that **privacy is a feature, not a
-constraint**. Every design decision defaults to the most privacy-preserving
-option. Data collection is opt-in, granular, visible, and fully revocable.
+## 4. Privacy-Preserving AI Annotation
 
----
+**Constraint:** The AI model must not extract personal data from screenshots.
+**Implementation:**
+- The prompt sent to Claude 3.5 Sonnet explicitly forbids reading exact text.
+- Claude is constrained to a strict JSON schema containing only `activity_type` (e.g., "browsing"), `category` (e.g., "productivity"), and a high-level `summary` of the UI structure.
 
-## 2. Consent Model
+## 5. User Control & Data Deletion
 
-*Details to be documented as the consent flow is implemented in Phase 2.*
+**Constraint:** Users own their data and can delete it at any time.
+**Implementation:**
+- **DELETE /data/me:** Triggers an immediate, permanent cascading delete in PostgreSQL.
+- Associated screenshot images are simultaneously deleted from S3/MinIO.
+- The extension resets its local counters upon successful deletion.
 
----
+## 6. Automatic Retention Purge
 
-## 3. Data Collection
-
-*Details to be documented as capture logic is implemented in Phases 3-4.*
-
----
-
-## 4. Redaction & Sanitization
-
-*Details to be documented as the redaction module is implemented in Phase 3.*
-
----
-
-## 5. Data Storage
-
-*Details to be documented as storage is implemented in Phases 1, 3, 4.*
-
----
-
-## 6. Data Retention & Deletion
-
-*Details to be documented as retention logic is implemented in Phase 5.*
-
----
-
-## 7. AI Annotation Privacy
-
-*Details to be documented as the annotation worker is implemented in Phase 4.*
-
----
-
-## 8. Security Controls
-
-*Details to be documented across all phases.*
+**Constraint:** Stale data must not be hoarded indefinitely.
+**Implementation:**
+- The backend runs an asynchronous background loop checking for data older than `RETENTION_DAYS` (configurable, default 30).
+- All expired events, AI annotations, and S3 objects are permanently deleted.
