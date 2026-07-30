@@ -184,11 +184,13 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   switch (message.type) {
     case "CONSENT_UPDATED":
       handleConsentUpdate(message.payload);
+      handleVisualCaptureState();
       sendResponse({ success: true });
       break;
 
     case "PAUSE_STATE_CHANGED":
       syncBadgeState();
+      handleVisualCaptureState();
       // Notify all content scripts about pause state
       broadcastToContentScripts({
         type: "CAPTURE_STATE_CHANGED",
@@ -304,6 +306,100 @@ async function handleDeleteAllData() {
   console.log("[VAI] Delete all data requested — will be implemented in Phase 5");
   return { success: true, message: "Stub — Phase 5" };
 }
+
+// =============================================================================
+// Visual Capture (Screenshots) - Phase 4
+// =============================================================================
+
+const VISUAL_CAPTURE_INTERVAL_MS = 30000; // 30 seconds
+let visualCaptureInterval = null;
+
+function startVisualCapture() {
+  if (visualCaptureInterval) return;
+  console.log("[VAI] Visual capture STARTED.");
+  visualCaptureInterval = setInterval(captureScreenshot, VISUAL_CAPTURE_INTERVAL_MS);
+}
+
+function stopVisualCapture() {
+  if (!visualCaptureInterval) return;
+  clearInterval(visualCaptureInterval);
+  visualCaptureInterval = null;
+  console.log("[VAI] Visual capture STOPPED.");
+}
+
+async function captureScreenshot() {
+  if (!(await isVisualCaptureAllowed())) {
+    stopVisualCapture();
+    return;
+  }
+
+  try {
+    const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
+    if (!tabs || tabs.length === 0) return;
+    const activeTab = tabs[0];
+    
+    // Don't capture privileged Chrome URLs or extension pages
+    if (activeTab.url.startsWith("chrome://") || activeTab.url.startsWith("chrome-extension://")) {
+      return;
+    }
+
+    const dataUrl = await chrome.tabs.captureVisibleTab(activeTab.windowId, { format: "jpeg", quality: 60 });
+    
+    if (dataUrl) {
+      await uploadScreenshot(dataUrl, activeTab.url);
+      
+      // Update session counter
+      const { sessionScreenshotCount = 0 } = await chrome.storage.local.get("sessionScreenshotCount");
+      await chrome.storage.local.set({
+        sessionScreenshotCount: sessionScreenshotCount + 1,
+      });
+    }
+  } catch (error) {
+    console.error("[VAI] Screenshot capture failed:", error);
+  }
+}
+
+async function uploadScreenshot(dataUrl, url) {
+  const apiKey = await getApiKey();
+  if (!apiKey) return;
+  
+  // Convert data URL to Blob for upload
+  const res = await fetch(dataUrl);
+  const blob = await res.blob();
+  
+  const formData = new FormData();
+  formData.append("file", blob, "screenshot.jpg");
+  formData.append("url", url);
+  formData.append("timestamp", Date.now().toString());
+
+  try {
+    const uploadRes = await fetch(`${API_BASE_URL}/ingest/screenshot`, {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${apiKey}`,
+      },
+      body: formData,
+    });
+    
+    if (!uploadRes.ok) {
+      console.error("[VAI] Screenshot upload failed:", uploadRes.status);
+    }
+  } catch (error) {
+    console.error("[VAI] Screenshot upload error:", error);
+  }
+}
+
+// Start/stop intervals based on consent
+async function handleVisualCaptureState() {
+  if (await isVisualCaptureAllowed()) {
+    startVisualCapture();
+  } else {
+    stopVisualCapture();
+  }
+}
+
+// Initial state check
+handleVisualCaptureState();
 
 // =============================================================================
 // Startup
