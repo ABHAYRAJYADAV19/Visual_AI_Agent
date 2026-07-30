@@ -212,7 +212,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
     case "VIEW_DATA":
       // Open data viewer (Phase 5)
-      console.log("[VAI] View data requested — will be implemented in Phase 5");
+      chrome.tabs.create({ url: chrome.runtime.getURL("viewer/viewer.html") });
       sendResponse({ success: true });
       break;
 
@@ -302,9 +302,34 @@ async function handleEventBatch(events) {
 // =============================================================================
 
 async function handleDeleteAllData() {
-  // Will call DELETE /data/me in Phase 5
-  console.log("[VAI] Delete all data requested — will be implemented in Phase 5");
-  return { success: true, message: "Stub — Phase 5" };
+  const apiKey = await getApiKey();
+  if (!apiKey) {
+    return { success: false, error: "Not registered" };
+  }
+
+  try {
+    const res = await fetch(`${API_BASE_URL}/data/me`, {
+      method: "DELETE",
+      headers: { "Authorization": `Bearer ${apiKey}` },
+    });
+    
+    if (!res.ok) {
+      throw new Error(`Delete failed: ${res.status}`);
+    }
+    
+    // Reset local stats
+    await chrome.storage.local.set({
+      sessionEventCount: 0,
+      sessionScreenshotCount: 0,
+      sessionStartTime: Date.now(),
+    });
+
+    console.log("[VAI] Successfully deleted all data for this install.");
+    return { success: true };
+  } catch (error) {
+    console.error("[VAI] Delete data error:", error);
+    return { success: false, error: error.message };
+  }
 }
 
 // =============================================================================
