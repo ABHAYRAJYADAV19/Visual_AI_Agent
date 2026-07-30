@@ -44,6 +44,22 @@ graph TD
     Claude -->|Metadata JSON| DB
 ```
 
+## 📸 Screenshots
+
+<div align="center">
+  <img src="Screenshots/onboarding.png" width="800" alt="Onboarding Flow" />
+  <br/>
+  <em>Privacy-First Onboarding Flow</em>
+  <br/><br/>
+  <img src="Screenshots/popup.png" width="400" alt="Extension Popup" />
+  <br/>
+  <em>Extension Popup UI & Stats</em>
+  <br/><br/>
+  <img src="Screenshots/viewer.png" width="800" alt="Data Viewer" />
+  <br/>
+  <em>Local Data Viewer with AI Summaries</em>
+</div>
+
 ## 🔒 Privacy-First Design Philosophy
 
 The core constraint of this system is that **user trust is paramount**.
