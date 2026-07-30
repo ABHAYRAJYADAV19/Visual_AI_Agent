@@ -155,3 +155,65 @@ async def ingest_events(
     await db.flush()
 
     return EventBatchResponse(ingested=ingested)
+
+
+# =============================================================================
+# Screenshot Ingestion
+# =============================================================================
+
+from datetime import datetime, timezone
+from fastapi import BackgroundTasks, File, Form, UploadFile
+from app.services.storage import upload_screenshot
+from app.services.annotator import annotate_screenshot
+from app.models.screenshot import Screenshot
+
+@router.post(
+    "/screenshot",
+    status_code=status.HTTP_201_CREATED,
+    summary="Ingest a screenshot and queue AI annotation",
+)
+async def ingest_screenshot(
+    background_tasks: BackgroundTasks,
+    file: UploadFile = File(...),
+    url: str = Form(...),
+    timestamp: int = Form(...),
+    install: Install = Depends(api_key_auth),
+    db: AsyncSession = Depends(get_db),
+) -> dict:
+    """Receive a screenshot from the extension.
+    
+    1. Redacts PII from the URL.
+    2. Uploads the image to S3 (MinIO).
+    3. Saves a record to the DB.
+    4. Enqueues a background task to annotate the image via Claude.
+    """
+    # Rate limit check
+    _check_rate_limit(install.id)
+
+    # 1. PII Redaction
+    safe_url = _server_redact(url)
+    
+    import asyncio
+    
+    # 2. Upload to S3 (in a thread to avoid blocking async event loop)
+    s3_key = await asyncio.to_thread(upload_screenshot, file.file, install.id)
+    
+    # 3. Save to DB
+    screenshot = Screenshot(
+        install_id=install.id,
+        s3_key=s3_key,
+        url=safe_url,
+        captured_at=datetime.fromtimestamp(timestamp / 1000.0, tz=timezone.utc),
+    )
+    
+    db.add(screenshot)
+    await db.flush()
+    
+    # 4. Enqueue AI Annotation
+    background_tasks.add_task(
+        annotate_screenshot, 
+        screenshot_id=screenshot.id, 
+        s3_key=s3_key
+    )
+    
+    return {"status": "success", "id": screenshot.id}
