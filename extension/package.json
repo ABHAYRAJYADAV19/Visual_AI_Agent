@@ -1,0 +1,14 @@
+{
+  "name": "visual-activity-agent-extension",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Chrome Extension for Visual Activity Agent — tests and dev tooling",
+  "type": "module",
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "devDependencies": {
+    "vitest": "^2.0.0"
+  }
+}
