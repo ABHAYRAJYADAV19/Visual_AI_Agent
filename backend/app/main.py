@@ -15,13 +15,28 @@ from app.routers import auth, ingest, data
 settings = get_settings()
 
 
+import asyncio
+from app.services.retention import run_retention_purge
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Application lifespan handler for startup/shutdown tasks."""
-    # Startup
-    print("[VAI] Backend starting up...")
+    # Startup: Background tasks
+    async def retention_loop():
+        while True:
+            await run_retention_purge()
+            # Run every 12 hours
+            await asyncio.sleep(12 * 3600)
+            
+    task = asyncio.create_task(retention_loop())
+    
     yield
-    # Shutdown
+    
+    # Shutdown logic
+    task.cancel()
+    try:
+        await task
+    except asyncio.CancelledError:
+        pass
     print("[VAI] Backend shutting down...")
 
 
