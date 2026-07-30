@@ -4,13 +4,206 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Welcome to Visual Activity Agent</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="onboarding.css">
 </head>
 <body>
-  <div id="onboarding-root">
-    <h1>Welcome to Visual Activity Agent</h1>
-    <p>Onboarding consent flow — Coming in Phase 2</p>
+  <div class="onboarding-container">
+    <!-- Header -->
+    <div class="onboarding-header">
+      <div class="logo-container">
+        <img src="../icons/icon-128.png" alt="Visual Activity Agent" class="logo-icon">
+        <div class="logo-glow"></div>
+      </div>
+      <h1>Visual Activity Agent</h1>
+      <p class="subtitle">Privacy-first browser activity monitoring with AI-powered insights</p>
+    </div>
+
+    <!-- Step indicator -->
+    <div class="step-indicator">
+      <div class="step active" data-step="1">
+        <span class="step-number">1</span>
+        <span class="step-label">Understand</span>
+      </div>
+      <div class="step-line"></div>
+      <div class="step" data-step="2">
+        <span class="step-number">2</span>
+        <span class="step-label">Choose</span>
+      </div>
+      <div class="step-line"></div>
+      <div class="step" data-step="3">
+        <span class="step-number">3</span>
+        <span class="step-label">Confirm</span>
+      </div>
+    </div>
+
+    <!-- Step 1: What we collect -->
+    <div class="step-content active" id="step-1">
+      <div class="card">
+        <h2>Here's exactly what this extension can collect</h2>
+        <p class="card-intro">
+          Transparency is our core principle. Nothing is collected without your
+          explicit permission. Here's a plain-language breakdown:
+        </p>
+
+        <div class="data-category">
+          <div class="category-icon">🖱️</div>
+          <div class="category-info">
+            <h3>Activity Events</h3>
+            <p>Click positions, scroll depth, page navigations, and tab switches.
+               We capture <strong>where</strong> you click (coordinates and element type),
+               <strong>never</strong> what you type.</p>
+            <div class="privacy-badge">
+              <span class="badge safe">✓ No text content captured</span>
+              <span class="badge safe">✓ No form values read</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="data-category">
+          <div class="category-icon">📸</div>
+          <div class="category-info">
+            <h3>Visual Capture (Screenshots)</h3>
+            <p>Periodic screenshots of your active tab, analyzed by AI to
+               categorize your activity type (e.g., "browsing documentation",
+               "video call"). The AI describes <strong>activity categories</strong>,
+               never transcribes visible text.</p>
+            <div class="privacy-badge">
+              <span class="badge warn">⚡ Separate opt-in required</span>
+              <span class="badge safe">✓ No text transcription</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="data-category">
+          <div class="category-icon">🔒</div>
+          <div class="category-info">
+            <h3>What We NEVER Collect</h3>
+            <ul class="never-list">
+              <li>Password field values</li>
+              <li>Credit card or payment information</li>
+              <li>Social security numbers or government IDs</li>
+              <li>Form inputs containing personal data</li>
+              <li>Data from domains you've blocked</li>
+            </ul>
+          </div>
+        </div>
+
+        <button class="btn btn-primary" id="btn-next-1">
+          I understand — let me choose
+          <span class="btn-arrow">→</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Step 2: Consent toggles -->
+    <div class="step-content" id="step-2">
+      <div class="card">
+        <h2>Choose what to enable</h2>
+        <p class="card-intro">
+          Both options are <strong>OFF by default</strong>. Enable only what you're
+          comfortable with. You can change these anytime from the extension popup.
+        </p>
+
+        <div class="consent-toggle-group">
+          <div class="consent-toggle" id="toggle-events">
+            <div class="toggle-header">
+              <div class="toggle-info">
+                <span class="toggle-icon">🖱️</span>
+                <div>
+                  <h3>Activity Events</h3>
+                  <p>Clicks, scrolls, navigation, tab switches</p>
+                </div>
+              </div>
+              <label class="switch">
+                <input type="checkbox" id="consent-events" aria-label="Enable activity event capture">
+                <span class="slider"></span>
+              </label>
+            </div>
+            <div class="toggle-status">
+              <span class="status-dot off"></span>
+              <span class="status-text">Capture OFF</span>
+            </div>
+          </div>
+
+          <div class="consent-toggle" id="toggle-visual">
+            <div class="toggle-header">
+              <div class="toggle-info">
+                <span class="toggle-icon">📸</span>
+                <div>
+                  <h3>Visual Capture</h3>
+                  <p>Periodic screenshots with AI activity categorization</p>
+                </div>
+              </div>
+              <label class="switch">
+                <input type="checkbox" id="consent-visual" aria-label="Enable visual screenshot capture">
+                <span class="slider"></span>
+              </label>
+            </div>
+            <div class="toggle-status">
+              <span class="status-dot off"></span>
+              <span class="status-text">Capture OFF</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="info-callout">
+          <span class="callout-icon">ℹ️</span>
+          <p>You can change these settings anytime by clicking the extension icon
+             in your browser toolbar. Your data can be viewed and deleted at any time.</p>
+        </div>
+
+        <div class="btn-group">
+          <button class="btn btn-secondary" id="btn-back-2">← Back</button>
+          <button class="btn btn-primary" id="btn-next-2">
+            Continue
+            <span class="btn-arrow">→</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 3: Confirm & finish -->
+    <div class="step-content" id="step-3">
+      <div class="card">
+        <h2>You're in control</h2>
+        <p class="card-intro">Here's a summary of your choices:</p>
+
+        <div class="summary-box">
+          <div class="summary-item" id="summary-events">
+            <span class="summary-icon">🖱️</span>
+            <span class="summary-label">Activity Events</span>
+            <span class="summary-value off">OFF</span>
+          </div>
+          <div class="summary-item" id="summary-visual">
+            <span class="summary-icon">📸</span>
+            <span class="summary-label">Visual Capture</span>
+            <span class="summary-value off">OFF</span>
+          </div>
+        </div>
+
+        <div class="controls-preview">
+          <h3>Remember, you can always:</h3>
+          <ul>
+            <li><strong>Pause/Resume</strong> capture from the extension popup</li>
+            <li><strong>View all your data</strong> stored on the server</li>
+            <li><strong>Delete all your data</strong> permanently with one click</li>
+            <li><strong>Change these settings</strong> at any time</li>
+          </ul>
+        </div>
+
+        <div class="btn-group">
+          <button class="btn btn-secondary" id="btn-back-3">← Back</button>
+          <button class="btn btn-primary btn-finish" id="btn-finish">
+            ✓ Save & Start Using
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
+
   <script src="onboarding.js"></script>
 </body>
 </html>

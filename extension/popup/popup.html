@@ -4,13 +4,131 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Visual Activity Agent</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="popup.css">
 </head>
 <body>
   <div id="popup-root">
-    <h1>Visual Activity Agent</h1>
-    <p>Popup UI — Coming in Phase 2</p>
+    <!-- Header -->
+    <div class="popup-header">
+      <div class="header-left">
+        <img src="../icons/icon-32.png" alt="" class="header-icon">
+        <h1>Visual Activity Agent</h1>
+      </div>
+      <div class="capture-status" id="capture-status">
+        <span class="status-indicator off" id="status-indicator"></span>
+        <span class="status-label" id="status-label">OFF</span>
+      </div>
+    </div>
+
+    <!-- Not onboarded state -->
+    <div class="section" id="not-onboarded" style="display: none;">
+      <div class="callout callout-info">
+        <p>Please complete the onboarding flow to get started.</p>
+        <button class="btn btn-primary btn-sm" id="btn-open-onboarding">Open Setup</button>
+      </div>
+    </div>
+
+    <!-- Main controls (shown after onboarding) -->
+    <div id="main-controls">
+      <!-- Pause/Resume -->
+      <div class="section">
+        <button class="btn btn-control" id="btn-pause-resume">
+          <span class="btn-icon" id="pause-icon">⏸️</span>
+          <span id="pause-label">Pause Capture</span>
+        </button>
+      </div>
+
+      <!-- Consent Toggles -->
+      <div class="section">
+        <h2 class="section-title">Capture Settings</h2>
+
+        <div class="toggle-row">
+          <div class="toggle-label">
+            <span class="toggle-emoji">🖱️</span>
+            <div>
+              <span class="toggle-name">Activity Events</span>
+              <span class="toggle-desc">Clicks, scrolls, navigation</span>
+            </div>
+          </div>
+          <label class="switch">
+            <input type="checkbox" id="popup-consent-events" aria-label="Toggle activity events">
+            <span class="slider"></span>
+          </label>
+        </div>
+
+        <div class="toggle-row">
+          <div class="toggle-label">
+            <span class="toggle-emoji">📸</span>
+            <div>
+              <span class="toggle-name">Visual Capture</span>
+              <span class="toggle-desc">Screenshots + AI analysis</span>
+            </div>
+          </div>
+          <label class="switch">
+            <input type="checkbox" id="popup-consent-visual" aria-label="Toggle visual capture">
+            <span class="slider"></span>
+          </label>
+        </div>
+      </div>
+
+      <!-- Quick Stats -->
+      <div class="section" id="stats-section">
+        <h2 class="section-title">Session</h2>
+        <div class="stats-grid">
+          <div class="stat">
+            <span class="stat-value" id="stat-events">0</span>
+            <span class="stat-label">Events</span>
+          </div>
+          <div class="stat">
+            <span class="stat-value" id="stat-screenshots">0</span>
+            <span class="stat-label">Screenshots</span>
+          </div>
+          <div class="stat">
+            <span class="stat-value" id="stat-session">0m</span>
+            <span class="stat-label">Duration</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Data Controls -->
+      <div class="section">
+        <h2 class="section-title">Your Data</h2>
+        <div class="btn-row">
+          <button class="btn btn-outline" id="btn-view-data">
+            <span class="btn-icon">📊</span> View My Data
+          </button>
+          <button class="btn btn-danger-outline" id="btn-delete-data">
+            <span class="btn-icon">🗑️</span> Delete All
+          </button>
+        </div>
+      </div>
+
+      <!-- Delete Confirmation Modal -->
+      <div class="modal-overlay" id="delete-modal" style="display: none;">
+        <div class="modal">
+          <div class="modal-icon">⚠️</div>
+          <h3>Delete All Your Data?</h3>
+          <p>This will permanently remove all your events, screenshots, and AI
+             annotations from the server. This action cannot be undone.</p>
+          <div class="modal-buttons">
+            <button class="btn btn-secondary btn-sm" id="btn-cancel-delete">Cancel</button>
+            <button class="btn btn-danger btn-sm" id="btn-confirm-delete">Delete Everything</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="popup-footer">
+      <a href="#" id="btn-options" class="footer-link">⚙️ Settings</a>
+      <span class="footer-sep">·</span>
+      <a href="#" id="btn-privacy" class="footer-link">🔒 Privacy</a>
+    </div>
   </div>
+
   <script src="popup.js"></script>
 </body>
 </html>
